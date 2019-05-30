@@ -12,5 +12,7 @@ def main():
         for row in csv_reader:
             print(",".join(row))
 
+##### Need to read csv file contents into data structure(s) #####
+
 if __name__ == "__main__":
     main()
