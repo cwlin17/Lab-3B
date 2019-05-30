@@ -7,6 +7,14 @@
 import sys, csv
 inodeList = []
 
+superBlock = None
+groupList = []
+freeBlockList = []
+freeInodeList = []
+inodeList = []
+directoryList = []
+indirectBlockRefList = []
+
 class SuperBlock:
     def __init__(self, param):
         self.totalNumBlocks = int(param[1])
@@ -48,11 +56,11 @@ class Inode:
         self.blocks = param[12:27]
         for i in range(0, numAdd):
             self.blocks[i] = int(self.blocks[i])
+
 class Directory:
     def __init__(self, param):
         self.parentInode = int(param[1])
         self.offset = int(param[2])
-
         self.referencedFileInodeNum = int(param[3])
 
 class IndirectBlockReferences:
@@ -64,12 +72,15 @@ class IndirectBlockReferences:
         self.referencedBlockNum = int(param[5])
 
 
+
 def findInodeInconsistencies():
+    global superBlock
     for inode in inodeList:
         #first check for invalid blocks
         for i in range(0, len(inode.blocks)):
             if (inode.blocks[i] < 0 or inode.blocks[i] > superBlock.totalNumBlocks):
-                print("INVALID BLOCK ", inode.blocks[i], "IN INODE", inode.inodeNum, "AT OFFSET ", j* superBlock.blockSize)
+                print("INVALID BLOCK", inode.blocks[i], "IN INODE", inode.inodeNum, "AT OFFSET", i* superBlock.blockSize)
+
 def main():
     # Checking for correct number of arguments
     if len(sys.argv) != 2:
@@ -79,14 +90,34 @@ def main():
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             firstCol = row[0]
-            if (firstCol == "INODE"):
+            if (firstCol == "SUPERBLOCK"):
+                global superBlock
+                superBlock = SuperBlock(row)
+            elif (firstCol == "GROUP"):
+                global groupList
+                temp = Group(row)
+                groupList.append(temp)
+            elif (firstCol == "BFREE"):
+                global freeBlockList
+                temp = FreeBlockEntries(row)
+                freeBlockList.append(temp)
+            elif (firstCol == "IFREE"):
+                global freeInodeList
+                temp = FreeInodeEntries(row)
+                freeInodeList.append(temp)
+            elif (firstCol == "DIRENT"):
+                global directoryList
+                temp = Directory(row)
+                directoryList.append(temp)
+            elif (firstCol == "INODE"):
                 global inodeList
                 tempInode = Inode(row)
                 inodeList.append(tempInode)
-
-
-            
-
+            elif (firstCol == "INDIRECT"):
+                global indirectBlockRefList
+                temp = IndirectBlockReferences(row)
+                indirectBlockRefList.append(temp)
+    findInodeInconsistencies()
 ##### Need to read csv file contents into data structure(s) #####
 if __name__ == "__main__":
     main()
