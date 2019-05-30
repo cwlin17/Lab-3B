@@ -64,10 +64,12 @@ class IndirectBlockReferences:
         self.referencedBlockNum = int(param[5])
 
 
-#def findInodeInconsistencies():
-   # for inode in inodeList:
+def findInodeInconsistencies():
+    for inode in inodeList:
         #first check for invalid blocks
-        #column 
+        for i in range(0, len(inode.blocks)):
+            if (inode.blocks[i] < 0 or inode.blocks[i] > superBlock.totalNumBlocks):
+                print("INVALID BLOCK ", inode.blocks[i], "IN INODE", inode.inodeNum, "AT OFFSET ", j* superBlock.blockSize)
 def main():
     # Checking for correct number of arguments
     if len(sys.argv) != 2:
