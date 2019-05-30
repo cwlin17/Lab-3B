@@ -5,6 +5,7 @@
 #!/usr/bin/python
 
 import sys, csv
+inodeList = []
 
 class SuperBlock:
     def __init__(self, param):
@@ -43,11 +44,15 @@ class Inode:
         self.group = int(param[5])
         self.linkCount = int(param[6])
         self.fileSize = int(param[10])
-
+        numAdd = len(param[12:27])
+        self.blocks = param[12:27]
+        for i in range(0, numAdd):
+            self.blocks[i] = int(self.blocks[i])
 class Directory:
     def __init__(self, param):
         self.parentInode = int(param[1])
         self.offset = int(param[2])
+
         self.referencedFileInodeNum = int(param[3])
 
 class IndirectBlockReferences:
@@ -58,25 +63,26 @@ class IndirectBlockReferences:
         self.indirectBlockNum = int(param[4])
         self.referencedBlockNum = int(param[5])
 
-def fillObjects():
-    with open(sys.argv[1], 'r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        for row in csv_reader:
-            firstCol = row[0]
-            if (firstCol == "INODE"):
-                print("Got an inode")
-    
+
+#def findInodeInconsistencies():
+   # for inode in inodeList:
+        #first check for invalid blocks
+        #column 
 def main():
     # Checking for correct number of arguments
     if len(sys.argv) != 2:
         sys.stderr.write("Incorrect number of arguments.\n")
         exit(1)
-
     with open(sys.argv[1], 'r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
-            print(",".join(row))
-    fillObjects()
+            firstCol = row[0]
+            if (firstCol == "INODE"):
+                global inodeList
+                tempInode = Inode(row)
+                inodeList.append(tempInode)
+
+
             
 
 ##### Need to read csv file contents into data structure(s) #####
