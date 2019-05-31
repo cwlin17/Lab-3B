@@ -6,6 +6,14 @@
 
 import sys, csv
 
+superBlock = None
+groupList = []
+freeBlockList = []
+freeInodeList = []
+inodeList = []
+directoryList = []
+indirectBlockRefList = []
+
 class SuperBlock:
     def __init__(self, param):
         self.totalNumBlocks = int(param[1])
@@ -63,6 +71,8 @@ def fillObjects():
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             firstCol = row[0]
+            if (firstCol == "SUPERBLOCK"):
+                
             if (firstCol == "INODE"):
                 print("Got an inode")
     
