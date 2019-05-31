@@ -44,6 +44,20 @@ class Inode:
         self.linkCount = int(param[6])
         self.fileSize = int(param[10])
 
+class Directory:
+    def __init__(self, param):
+        self.parentInode = int(param[1])
+        self.offset = int(param[2])
+        self.referencedFileInodeNum = int(param[3])
+
+class IndirectBlockReferences:
+    def __init__(self, param):
+        self.inodeNumOfOwningFile = int(param[1])
+        self.indirectionLevel = int(param[2])
+        self.logicalBlockOffset = int(param[3])
+        self.indirectBlockNum = int(param[4])
+        self.referencedBlockNum = int(param[5])
+
 def fillObjects():
     with open(sys.argv[1], 'r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
