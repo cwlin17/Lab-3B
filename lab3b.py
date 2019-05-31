@@ -90,14 +90,28 @@ def main():
                 superBlock = SuperBlock(row)
             elif (firstCol == "GROUP"):
                 global groupList
+                temp = Group(row)
+                groupList.append(temp)
             elif (firstCol == "BFREE"):
+                global freeBlockList
+                temp = FreeBlockEntries(row)
+                freeBlockList.append(temp)
             elif (firstCol == "IFREE"):
+                global freeInodeList
+                temp = FreeInodeEntries(row)
+                freeInodeList.append(temp)
             elif (firstCol == "DIRENT"):
+                global directoryList
+                temp = Directory(row)
+                directoryList.append(temp)
             elif (firstCol == "INODE"):
                 global inodeList
                 tempInode = Inode(row)
                 inodeList.append(tempInode)
             elif (firstCol == "INDIRECT"):
+                global indirectBlockRefList
+                temp = IndirectBlockReferences(row)
+                indirectBlockRefList.append(temp)
 
 ##### Need to read csv file contents into data structure(s) #####
 if __name__ == "__main__":
