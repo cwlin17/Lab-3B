@@ -8,13 +8,13 @@ import sys, csv
 
 class SuperBlock:
     def __init__(self, param):
-        self.totalNumBlocks = param[1]
-        self.totalNumInodes = param[2]
-        self.blockSize = param[3]
-        self.inodeSize = param[4]
-        self.blocksPerGroup = param[5]
-        self.inodesPerGroup = param[6]
-        self.firstNonresInode = param[7]
+        self.totalNumBlocks = int(param[1])
+        self.totalNumInodes = int(param[2])
+        self.blockSize = int(param[3])
+        self.inodeSize = int(param[4])
+        self.blocksPerGroup = int(param[5])
+        self.inodesPerGroup = int(param[6])
+        self.firstNonresInode = int(param[7])
 
 class Group:
     def __init__(self, param):
@@ -23,9 +23,9 @@ class Group:
         self.totalInodesInGroup = int(param[3])
         self.numFreeBlocks = int(param[4])
         self.numFreeInodes = int(param[5])
-        self.freeBlockBitmap = param[6]
-        self.freeInodeBitmap = param[7]
-        self.firstBlockInodes = param[8]
+        self.freeBlockBitmap = int(param[6])
+        self.freeInodeBitmap = int(param[7])
+        self.firstBlockInodes = int(param[8])
 
 class FreeBlockEntries:
     def __init__(self, param):
@@ -39,8 +39,8 @@ class Inode:
     def __init__(self, param):
         self.inodeNum = int(param[1])
         self.fileType = param[2]
-        self.owner = param[4]
-        self.group = param[5]
+        self.owner = int(param[4])
+        self.group = int(param[5])
         self.linkCount = int(param[6])
         self.fileSize = int(param[10])
 
