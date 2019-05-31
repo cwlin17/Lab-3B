@@ -10,3 +10,9 @@ Research:
 
     https://www.w3schools.com/python/ref_func_open.asp
     Used to learn about the arguments for the open function.
+
+    https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python
+    Used to learn how to print to stderr.
+
+    https://www.pythonforbeginners.com/system/python-sys-argv
+    Used to figure out how to detect correct number of command line arguments.
