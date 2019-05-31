@@ -7,10 +7,16 @@
 import sys, csv
 
 def main():
+    # Checking for correct number of arguments
+    if len(sys.argv) != 2:
+        sys.stderr.write("Incorrect number of arguments.\n")
+        exit(1)
+
     with open(sys.argv[1], 'r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             print(",".join(row))
+            
 
 ##### Need to read csv file contents into data structure(s) #####
 

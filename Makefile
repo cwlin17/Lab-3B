@@ -3,6 +3,7 @@
 # ID: 804971410, 804984337
 
 default:
+	python2 lab3b.py trivial.csv
 
 dist:
 	tar -czvf lab3b-804984337.tar.gz README Makefile lab3b.py
