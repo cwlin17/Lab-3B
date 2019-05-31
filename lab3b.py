@@ -85,7 +85,7 @@ def main():
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
             firstCol = row[0]
-            if (firstCol == "SUPERNODE"):
+            if (firstCol == "SUPERBLOCK"):
                 global superBlock
                 superBlock = SuperBlock(row)
             elif (firstCol == "GROUP"):
@@ -113,6 +113,13 @@ def main():
                 temp = IndirectBlockReferences(row)
                 indirectBlockRefList.append(temp)
 
-##### Need to read csv file contents into data structure(s) #####
+    # Inode Allocation Audits
+    for inode in inodeList:
+        type = inode.fileType
+        allocated = false
+        unallocated = false
+        if type == 0:
+            unallocated = true
+
 if __name__ == "__main__":
     main()
