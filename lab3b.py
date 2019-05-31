@@ -5,7 +5,6 @@
 #!/usr/bin/python
 
 import sys, csv
-inodeList = []
 
 superBlock = None
 groupList = []
@@ -71,10 +70,15 @@ class IndirectBlockReferences:
         self.indirectBlockNum = int(param[4])
         self.referencedBlockNum = int(param[5])
 
-#def findInodeInconsistencies():
-   # for inode in inodeList:
+
+
+def findInodeInconsistencies():
+    global superBlock
+    for inode in inodeList:
         #first check for invalid blocks
-        #column 
+        for i in range(0, len(inode.blocks)):
+            if (inode.blocks[i] < 0 or inode.blocks[i] > superBlock.totalNumBlocks):
+                print("INVALID BLOCK", inode.blocks[i], "IN INODE", inode.inodeNum, "AT OFFSET", i* superBlock.blockSize)
 
 def main():
     # Checking for correct number of arguments
@@ -112,6 +116,8 @@ def main():
                 global indirectBlockRefList
                 temp = IndirectBlockReferences(row)
                 indirectBlockRefList.append(temp)
+
+    findInodeInconsistencies()
 
     # Inode Allocation Audits
     for inode in inodeList:
