@@ -1,3 +1,4 @@
+
 # NAME: Don Le, Carol Lin
 # EMAIL: donle22599@g.ucla.edu, carol9gmail@yahoo.com
 # ID: 804971410, 804984337
@@ -12,8 +13,9 @@ freeBlockList = []
 freeInodeList = []
 inodeList = []
 directoryList = []
-indirectBlockRefList = []
-
+indirectList = []
+refBlockList = [] #2 dimensional array to store referenced blocks
+freeBlockArray = []
 class SuperBlock:
     def __init__(self, param):
         self.totalNumBlocks = int(param[1])
@@ -51,10 +53,12 @@ class Inode:
         self.group = int(param[5])
         self.linkCount = int(param[6])
         self.fileSize = int(param[10])
-        numAdd = len(param[12:27])
-        self.blocks = param[12:27]
+        numAdd = len(param[12:28])
+        self.blocks = param[12:28]
         for i in range(0, numAdd):
             self.blocks[i] = int(self.blocks[i])
+
+
 
 class Directory:
     def __init__(self, param):
@@ -64,22 +68,103 @@ class Directory:
 
 class IndirectBlockReferences:
     def __init__(self, param):
-        self.inodeNumOfOwningFile = int(param[1])
+        self.inodeNum = int(param[1]) #of owning file
         self.indirectionLevel = int(param[2])
         self.logicalBlockOffset = int(param[3])
-        self.indirectBlockNum = int(param[4])
+        self.blockNum = int(param[4])
         self.referencedBlockNum = int(param[5])
 
+class blockRef:
+    def __init__(self,inodeNum, blockNum, offset, indirectionLevel):
+        self.inodeNum = inodeNum
+        self.blockNum = blockNum
+#        self.numOfRef = 0;
+        self.offset = offset
+        self.indirectionLevel = indirectionLevel
 
 
 def findInodeInconsistencies():
     global superBlock
+    global refBlockList
     for inode in inodeList:
         #first check for invalid blocks
         for i in range(0, len(inode.blocks)):
+            indirectionLevel = " "
+            offset = i
+            if (i == 12):
+                indirectionLevel = " INDIRECT "
+            elif (i == 13):
+                indirectionLevel = " DOUBLE INDIRECT "
+                offset = 256 + 12;
+            elif (i == 14):
+                indirectionLevel = " TRIPLE INDIRECT "
+                offset = 12 + 256*256 + 256;
             if (inode.blocks[i] < 0 or inode.blocks[i] > superBlock.totalNumBlocks):
-                print("INVALID BLOCK", inode.blocks[i], "IN INODE", inode.inodeNum, "AT OFFSET", i* superBlock.blockSize)
+                print("INVALID{}BLOCK {} IN INODE {} AT OFFSET {}".format(indirectionLevel,inode.blocks[i], inode.inodeNum, offset))
+            #Now check which are pointing to reserved blocks
+            elif (inode.blocks[i] >= 1 and inode.blocks[i] < 8): #check blocks
+                print("RESERVED{}BLOCK {} IN INODE {} AT OFFSET {}".format(indirectionLevel,inode.blocks[i], inode.inodeNum, offset))
+            else: #put block into block list to check later
+                blockNum = inode.blocks[i]
+                if (i < 12):
+                    tempBlock = blockRef(inode.inodeNum, inode.blocks[i], offset, 0)
+                    refBlockList[blockNum].append(tempBlock)
+                elif (i == 12):
+                    tempBlock = blockRef(inode.inodeNum, inode.blocks[i], offset, 1)
+                    refBlockList[blockNum].append(tempBlock)
+                elif (i == 13):
+                    tempBlock = blockRef(inode.inodeNum, inode.blocks[i], offset, 2)
+                    refBlockList[blockNum].append(tempBlock)
+                elif (i == 14):
+                    tempBlock = blockRef(inode.inodeNum, inode.blocks[i], offset, 3)
+                    refBlockList[blockNum].append(tempBlock)
+#                print(tempBlock.blockNum)
+#                print(refBlockList[blockNum][0].blockNum)
+    #Do all the same checks but for indirects
+    for indirect in indirectList:
+        indirectionLevel = "INDIRECT" #For indirection level 1
+        if (indirect.indirectionLevel == 2):
+            indirectionLevel = "DOUBLE INDIRECT"
+        elif (indirect.indirectionLevel == 3):
+            indirectionLevel = "TRIPLE INDIRECT"
+        if(indirect.referencedBlockNum >= 1 and indirect.referencedBlockNum < 8):
+            print("RESERVED{}BLOCK {} IN INODE {} AT OFFSET {}".format(indirectionLevel,indirect.referencedBlockNum,indirect.inodeNum,indirect.logicalBlockOffset))
+        elif(indirect.referencedBlockNum < 0 or indirect.referencedBlockNum > superBlock.totalNumBlocks):
+            print("INVALID{}BLOCK {} IN INODE {} AT OFFSET {}".format(indirectionLevel,indirect.referencedBlockNum,indirect.inodeNum,indirect.logicalBlockOffset))
+        else:
+            blockNum = indirect.referencedBlockNum
+            if (indirect.indirectionLevel == 1):
+                tempBlock = blockRef(indirect.inodeNum, indirect.referencedBlockNum, indirect.logicalBlockOffset, 1);
+                refBlockList[blockNum].append(tempBlock)
+            elif (indirect.indirectionLevel == 2):
+                tempBlock = blockRef(indirect.inodeNum, indirect.referencedBlockNum, indirect.logicalBlockOffset, 2);
+                refBlockList[blockNum].append(tempBlock)
+            elif (indirect.indirectionLevel == 3):
+                tempBlock = blockRef(indirect.inodeNum, indirect.referencedBlockNum, indirect.logicalBlockOffset, 3);
+                refBlockList[blockNum].append(tempBlock)
+#            print(blockNum)
+        #Now check for unreferenced blocks that are not on free list or referenced by a file
+    
+    #Also check if an allocated block is on a freelist
+    global freeBlockArray
+    for i in range (8, superBlock.totalNumBlocks):
+        if len(refBlockList[i]) == 0 and (i not in freeBlockArray):
+            print("UNREFERENCED BLOCK {}".format(i))
+        elif len(refBlockList[i]) !=0 and (i in freeBlockArray):
+            print("ALLOCATED BLOCK {} ON FREELIST".format(i))
+        if (len(refBlockList[i]) > 1):
+            for j in range (0, len(refBlockList[i])):
+                indirectionLevel = " "
+                if (refBlockList[i][j].indirectionLevel == 1):
+                    indirectionLevel = " INDIRECT "
+                elif (refBlockList[i][j].indirectionLevel == 2):
+                    indirectionLevel = " DOUBLE INDIRECT "
+                elif (refBlockList[i][j].indirectionLevel == 3):
+                    indirectionLevel = " TRIPLE INDIRECT "
+                print("DUPLICATE{}BLOCK {} IN INODE {} AT OFFSET {}".format(indirectionLevel, refBlockList[i][j].blockNum, refBlockList[i][j].inodeNum, refBlockList[i][j].offset)) 
 
+        
+        
 def main():
     # Checking for correct number of arguments
     if len(sys.argv) != 2:
@@ -98,8 +183,10 @@ def main():
                 groupList.append(temp)
             elif (firstCol == "BFREE"):
                 global freeBlockList
+                global freeBlockArray
                 temp = FreeBlockEntries(row)
                 freeBlockList.append(temp)
+                freeBlockArray.append(int(row[1]))
             elif (firstCol == "IFREE"):
                 global freeInodeList
                 temp = FreeInodeEntries(row)
@@ -113,19 +200,13 @@ def main():
                 tempInode = Inode(row)
                 inodeList.append(tempInode)
             elif (firstCol == "INDIRECT"):
-                global indirectBlockRefList
+                global indirectList
                 temp = IndirectBlockReferences(row)
-                indirectBlockRefList.append(temp)
+                indirectList.append(temp)
+    global refBlockList
+    refBlockList = [[] for y in range(superBlock.totalNumBlocks)] #initialize
 
     findInodeInconsistencies()
-
-    # Inode Allocation Audits
-    for inode in inodeList:
-        type = inode.fileType
-        allocated = false
-        unallocated = false
-        if type == 0:
-            unallocated = true
 
 if __name__ == "__main__":
     main()
