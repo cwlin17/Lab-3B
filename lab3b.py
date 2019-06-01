@@ -65,6 +65,7 @@ class Directory:
         self.parentInode = int(param[1])
         self.offset = int(param[2])
         self.referencedFileInodeNum = int(param[3])
+        self.name = param[6]
 
 class IndirectBlockReferences:
     def __init__(self, param):
@@ -170,6 +171,14 @@ def main():
     if len(sys.argv) != 2:
         sys.stderr.write("Incorrect number of arguments.\n")
         exit(1)
+
+    # Checking if file exists
+    try:
+        open(sys.argv[1], 'r')
+    except:
+        sys.stderr.write("Unable to open file.\n")
+        exit(1)
+
     with open(sys.argv[1], 'r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
@@ -208,5 +217,70 @@ def main():
 
     findInodeInconsistencies()
 
-if __name__ == "__main__":
+    ####### Inode Allocation Audits #######
+    accountedNodes = [1, 3, 4, 5, 6, 7, 8, 9, 10]
+    allocInodes = []
+    # Check every allocated inode and see if it's also on free list
+    for inode in inodeList:
+        accountedNodes.append(inode.inodeNum)
+        allocInodes.append(inode.inodeNum)
+        if (inode.fileType != 0):
+            for freeNode in freeInodeList:
+                if (freeNode.freeInodeNum == inode.inodeNum):
+                    print("ALLOCATED INODE " + str(inode.inodeNum) + " ON FREELIST")
+
+    # Put all free inodes on accountedNodes list
+    for freeNode in freeInodeList:
+        accountedNodes.append(freeNode.freeInodeNum)
+
+    # If inode isn't on accountedNodes list, then it's an unallocated
+    # inode that's not on the free list
+    for i in range(1, superBlock.totalNumInodes + 1):
+        if i not in accountedNodes:
+            print("UNALLOCATED INODE " + str(i) + " NOT ON FREELIST") 
+
+    ####### Directory Consistency Audits #######
+    for inode in inodeList:
+        reference = inode.linkCount
+        number = inode.inodeNum
+        count = 0
+        for directory in directoryList:
+            fileInode = directory.referencedFileInodeNum
+            if (number == fileInode):
+                count += 1
+        if (count != reference):
+            print("INODE " + str(number) + " HAS " + str(count) + " LINKS BUT LINKCOUNT IS " + str(reference))
+
+    child2Parent = {}
+    parents = {}
+
+    # Checking each directory entry
+    for directory in directoryList:
+        fileInode = directory.referencedFileInodeNum
+        parent = directory.parentInode
+        # Invalid inode
+        if (fileInode < 1 or fileInode > superBlock.totalNumInodes):
+            print("DIRECTORY INODE " + str(parent) + " NAME " + directory.name + " INVALID INODE " + str(fileInode))
+        # Checks allocInodes list to see if inode is allocated
+        elif (fileInode not in allocInodes):
+            print("DIRECTORY INODE " + str(parent) + " NAME " + directory.name + " UNALLOCATED INODE " + str(fileInode))
+        # Checking that the link (.) is to itself
+        if (directory.name == "'.'" and parent != fileInode):
+            print("DIRECTORY INODE " + str(parent) + " NAME " + directory.name + " LINK TO INODE " + str(fileInode) + " SHOULD BE " + str(parent))
+        # Adding each referenced file and parent pair to a dictionary
+        if (directory.name != "'.'" and directory.name != "'..'"):
+            child2Parent[fileInode] = parent
+        if (directory.name == "'..'"):
+            parents[parent] = fileInode
+
+    # Checking for correctness of 2 links
+    for parent in parents:
+        if (parent == 2 and parents[parent] != 2):
+            print("DIRECTORY INODE " + str(parent) + " NAME '..' LINK TO INODE " + str(parents[parent]) + " SHOULD BE " + str(parent))
+        elif (parent == 2):
+            continue
+        elif (parents[parent] != child2Parent[parent]):
+            print("DIRECTORY INODE " + str(parent) + " NAME '..' LINK TO INODE " + str(parents[parent]) + " SHOULD BE " + str(child2Parent[parent]))
+
+if __name__ == "__main__": 
     main()
