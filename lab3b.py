@@ -129,22 +129,16 @@ def main():
                 if (freeNode.freeInodeNum == inode.inodeNum):
                     print("ALLOCATED INODE " + str(inode.inodeNum) + " ON FREELIST")
 
+    # Put all free inodes on accountedNodes list
     for freeNode in freeInodeList:
         accountedNodes.append(freeNode.freeInodeNum)
 
+    # If inode isn't on accountedNodes list, then it's an unallocated
+    # inode that's not on the free list
     for i in range(1, superBlock.totalNumInodes + 1):
         if i not in accountedNodes:
             print("UNALLOCATED INODE " + str(i) + " NOT ON FREELIST") 
 
-        #if i in (1, 3, 4, 5, 6, 7, 8, 9, 10):
-            #continue
-        # Check every allocated inode and see if it's also on free list
-       # for inode in inodeList:
-        #    if (inode.fileType != 0 and inode.inodeNum == i):
-         #      for freeNode in freeInodeList:
-          #         if (freeNode.freeInodeNum == i):
-           #            print("ALLOCATED INODE " + str(i) + " ON FREELIST")
-                       
     # Directory Consistency Audits
     for inode in inodeList:
         reference = inode.linkCount
