@@ -86,6 +86,14 @@ def main():
     if len(sys.argv) != 2:
         sys.stderr.write("Incorrect number of arguments.\n")
         exit(1)
+
+    # Checking if file exists
+    try:
+        open(sys.argv[1], 'r')
+    except:
+        sys.stderr.write("Unable to open file.\n")
+        exit(1)
+
     with open(sys.argv[1], 'r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         for row in csv_reader:
@@ -165,7 +173,7 @@ def main():
         if (fileInode < 1 or fileInode > superBlock.totalNumInodes):
             print("DIRECTORY INODE " + str(parent) + " NAME " + directory.name + " INVALID INODE " + str(fileInode))
         # Checks allocInodes list to see if inode is allocated
-        if (fileInode not in allocInodes):
+        elif (fileInode not in allocInodes):
             print("DIRECTORY INODE " + str(parent) + " NAME " + directory.name + " UNALLOCATED INODE " + str(fileInode))
         # Checking that the link (.) is to itself
         if (directory.name == "'.'" and parent != fileInode):
@@ -180,6 +188,8 @@ def main():
     for parent in parents:
         if (parent == 2 and parents[parent] != 2):
             print("DIRECTORY INODE " + str(parent) + " NAME '..' LINK TO INODE " + str(parents[parent]) + " SHOULD BE " + str(parent))
+        elif (parent == 2):
+            continue
         elif (parents[parent] != child2Parent[parent]):
             print("DIRECTORY INODE " + str(parent) + " NAME '..' LINK TO INODE " + str(parents[parent]) + " SHOULD BE " + str(child2Parent[parent]))
 

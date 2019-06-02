@@ -11,4 +11,4 @@ dist:
 	tar -czvf lab3b-804984337.tar.gz README Makefile lab3b.py run.sh
 
 clean:
-	rm -f lab3b-804984337.tar.gz
+	rm -f lab3b-804984337.tar.gz lab3b
